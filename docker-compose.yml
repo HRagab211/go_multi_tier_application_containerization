@@ -1,0 +1,48 @@
+services:
+
+  # database container 
+  db:
+    image: mysql:latest
+    container_name: go_db
+    environment:
+      MYSQL_DATABASE: go_db
+      MYSQL_USER: hossam
+      MYSQL_USER_PASSWORD: user_1234
+      MYSQL_ROOT_PASSWORD: admin_1234
+    restart: always
+    networks:
+      - nat1
+    depends_on:
+      - proxy
+  # application container 
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: go_app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/main.go:/var/www/html/main.go:ro
+    networks:
+      - nat1
+    depends_on:
+      - db
+# proxy 
+  proxy:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: go_proxy
+    restart: always
+    networks:
+      - nat1
+    ports:
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+networks:
+  nat1:
+    driver: bridge
